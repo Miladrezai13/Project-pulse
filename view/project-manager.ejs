@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="/style2.css">
+</head>
+
+<body>
+    <header>
+        <%- include('header2.ejs') %>
+    </header>
+    <div class="createproject">
+        <form action="/create-project" method="POST">
+            <label for="projectName">Project Name:</label>
+            <input type="text" id="projectName" name="projectName" required>
+            <label for="reportingFrequency">Reporting Frequency:</label>
+            <select id="reportingFrequency" name="reportingFrequency">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="fortnightly">Fortnightly</option>
+                <option value="monthly">Monthly</option>
+            </select>
+            <label for="reportingDate">Projects Starts at:</label>
+            <input type="date" id="reportingDate" name="reportingDate">
+            <label for="deadline">Projects Ends at:</label>
+            <input type="date" id="deadline" name="deadline">
+            <div class="teammem">
+                <label for="teamMembers">Add Team Members:</label>
+                <div id="teamMembersContainer">
+                    <% if(typeof teamMembers !=='undefined' ) { %>
+                        <% teamMembers.forEach(member=> { %>
+                            <div class="team-member" data-user-id="<%= member.user_id %>">
+                                <button class="member-symbol" onclick="toggleMember(event, this)">Add </button>
+                                <span class="member-name">
+                                    <%= member.user_id %>
+                                        <%= member.name %>
+                                </span>
+                                (<%= member.email %>)
+                                    <span class="status"></span>
+                            </div>
+                            <% }) %>
+                                <% } %>
+                                    <input type="hidden" id="selectedMembers" name="teamMembers">
+                </div>
+                <button type="submit">Create Project</button>
+            </div>
+        </form>
+    </div>
+
+    <%- include('footer.ejs') %>
+</body>
+<script>
+
+    function toggleMember(event, element) {
+        event.preventDefault();
+        const parent = element.parentElement;
+        const statusSpan = parent.querySelector('.status');
+        const userId = parent.getAttribute('data-user-id');
+        const selectedMembersInput = document.getElementById('selectedMembers');
+        let selectedMembers = selectedMembersInput.value.split(',').filter(Boolean);
+
+        if (element.textContent === 'Add') {
+            element.textContent = 'Remove';
+            statusSpan.textContent = '✓';
+            statusSpan.style.color = 'green';
+
+            // Add the user_id to the hidden input
+            if (!selectedMembers.includes(userId)) {
+                selectedMembers.push(userId);
+            }
+        } else {
+            element.textContent = 'Add';
+            statusSpan.textContent = '';
+            // Remove the user_id from the hidden input
+            selectedMembers = selectedMembers.filter(id => id !== userId);
+        }
+        selectedMembersInput.value = selectedMembers.join(',');
+    }
+</script>
+
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Member Dashboard</title>
+
+    <link rel="stylesheet" href="/style3.css">
+
+</head>
+
+<body>
+    <header>
+        <%- include('header3.ejs') %>
+    </header>
+
+    <h2>The projects below are assigned to you</h2>
+
+    <% projects.forEach((project)=> { %>
+        <div class="project-section">
+            <p1>Project <%= project.project_name %>
+            </p1>
+
+            <div class="box item3">
+                <div class="reporting-frequency">
+                    <p>Reporting <%= project.reporting_frequency %>
+                    </p>
+                    <p>Starting:
+                        <% const reportDate=new Date(project.reporting_date); const
+                            formattedReportDate=`${reportDate.getMonth() +
+                            1}/${reportDate.getDate()}/${reportDate.getFullYear()}`; %>
+                            <%= formattedReportDate %>
+                    </p>
+                    <p>Ends:
+                        <% const deadlineDate=new Date(project.deadline); const
+                            formattedDeadlineDate=`${deadlineDate.getMonth() +
+                            1}/${deadlineDate.getDate()}/${deadlineDate.getFullYear()}`; %>
+                            <%= formattedDeadlineDate %>
+                    </p>
+                </div>
+
+            </div>
+            <div class="boxitem1">
+                <h2>Earlier Reports</h2>
+                <div class="report-history">
+                    <% if (project.reports && project.reports.length) { %>
+                        <% project.reports.forEach(report=> { %>
+                            <div class="single-report">
+                                <p class="reporttxt">
+                                    <%= report.content %>
+                                </p>
+                                <% const submissionDate=new Date(report.submission_date); const
+                                    formattedSubmissionDate=`${submissionDate.getMonth() +
+                                    1}/${submissionDate.getDate()}/${submissionDate.getFullYear()}`; %>
+                                    <p class="reportdate">
+                                        Submitted on: <%= formattedSubmissionDate %>
+                                            <%= report.status %>
+                                    </p>
+                                    <% if (report.comment && report.comment.trim() !=="" ) { %>
+                                        <p class="report-comments">
+                                            Comments: <%= report.comment %>
+                                        </p>
+                                        <% } %>
+                            </div>
+                            <% }); %>
+                                <% } else { %>
+                                    <p>No reports submitted yet for this project.</p>
+                                    <% } %>
+                </div>
+            </div>
+            <div class="box2">
+                <h2>your task</h2>
+                <div class="boxitem2">
+                    <% if (project.tasks && project.tasks.length) { %>
+                        <% project.tasks.forEach(task=> { %>
+                            <% if(task.status !=="Completed" ) { %>
+                                <div class="task">
+                                    <% const currentDate=new Date(); const timeDifference=task.due_date - currentDate;
+                                        daysDifference=Math.ceil(timeDifference / (1000 * 60 * 60 * 24)); let
+                                        timeRemainingMessage='' ; if (daysDifference> 1) {
+                                        timeRemainingMessage = `(in ${daysDifference} days)`;
+                                        } else if (daysDifference === 1 && timeDifference > 1000 * 60 * 60 * 24) {
+                                        timeRemainingMessage = `(in 1 day)`;
+                                        } else if (timeDifference > 0) {
+                                        const hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60));
+                                        timeRemainingMessage = `(in ${hoursDifference} hours)`;
+                                        } else {
+                                        timeRemainingMessage = `(due date has passed)`;
+                                        } %>
+                                        <% let reportExistsForTask=project.reports.some(report=> report.task_id ===
+                                            task.task_id); %>
+                                            <p>Report Due: <%= new Intl.DateTimeFormat('en-US', { weekday: 'long' ,
+                                                    month: 'long' , day: 'numeric' }).format(task.due_date) %>
+                                                    <%= timeRemainingMessage %>
+                                                        <br>
+
+                                                        <button class="btnwritereport"
+                                                            onclick="showReportForm('<%= project.project_id %>', '<%= task.task_id %>')">
+                                                            <%= (reportExistsForTask || task.status==="Completed" )
+                                                                ? "Task completed" : "Write report" %>
+                                                        </button>
+                                            </p>
+                                </div>
+                                <% } %>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <p>No tasks assigned yet for this project.</p>
+                                            <% } %>
+
+                                                <div class="modal" id="reportModal<%= project.project_id %>">
+                                                    <div class="modal-content">
+                                                        <form action="/submit-report" method="post">
+                                                            <input type="hidden" name="projectId"
+                                                                value="<%= project.project_id %>">
+                                                            <textarea name="content"
+                                                                placeholder="Write your report here..."
+                                                                style="margin-left: -20%;"></textarea>
+                                                            <br>
+                                                            <button type="submit">Submit Report</button>
+                                                            <button type="button"
+                                                                onclick="closeModal('<%= project.project_id %>')">Close</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                </div>
+            </div>
+        </div>
+        <% }) %>
+
+            <%- include('footer.ejs') %>
+</body>
+
+</html>
+
+<script>
+    function showReportForm(projectId, taskId) {
+        const modal = document.getElementById('reportModal' + projectId);
+        const taskInput = document.createElement('input');
+        taskInput.type = 'hidden';
+        taskInput.name = 'taskId';
+        taskInput.value = taskId;
+
+        const form = modal.querySelector('form');
+        form.appendChild(taskInput);
+        if (modal) {
+            modal.style.display = "flex";
+        }
+    }
+
+    function closeModal(projectId) {
+        const modal = document.getElementById(`reportModal${projectId}`);
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>

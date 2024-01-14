@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style2.css">
+    <title>File Upload</title>
+</head>
+
+
+<body>
+
+    <header><%- include('header2.ejs') %></header>
+    <div class="addteam">
+        <div class="userList">
+            <p class="pteam">Current Team Members</p>
+            <br>
+            <br>
+            <br><br>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+        </div>
+
+        <div class="uploadform">
+            <p1>Upload your csv file to add the team member</p1>
+
+            <form action="/upload" method="post" enctype="multipart/form-data" style="width: 400px;">
+
+                <label for="file">Choose file to upload </label>
+                <input type="file" id="file" name="file" accept=".csv">
+                <button type="submit" class="bt">
+                    <p>Add Members
+                    <p>
+                </button>
+                <div id="uploadMessage"></div>
+
+            </form>
+        </div>
+    </div>
+    <%- include('footer.ejs') %>
+</body>
+
+</html>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            let response = await fetch('/getUsers');
+            let users = await response.json();
+
+            let userList = document.querySelector('.userList tbody');  
+            users.forEach(user => {
+                let tr = document.createElement('tr');
+
+                let tdName = document.createElement('td');
+                tdName.textContent = user.name;
+                tr.appendChild(tdName);
+
+                let tdEmail = document.createElement('td');
+                tdEmail.textContent = user.email;
+                tr.appendChild(tdEmail);
+
+                let tdRole = document.createElement('td');
+                tdRole.textContent = user.role;
+                tr.appendChild(tdRole);
+
+                userList.appendChild(tr);
+            });
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    });
+
+    document.querySelector('form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+
+        try {
+            let response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            let data = await response.json();
+            document.getElementById('uploadMessage').textContent = data.message;
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('uploadMessage').textContent = 'An error occurred. Please try again.';
+        }
+    });
+
+</script>

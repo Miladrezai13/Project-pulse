@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Manager Dashboard</title>
+    <link rel="stylesheet" href="/style1.css">
+    <script src="/path_to_your_scripts.js"></script>
+</head>
+
+<body>
+    <header>
+        <%- include('header2.ejs') %>
+    </header>
+
+    <% projects.forEach((project)=> { %>
+        <div class="project-section">
+            <h2 class="aa" onclick="toggleProjectDetails(event)">
+                Project <%= project.project_name %>
+            </h2>
+            <div class="project-details hidden">
+                <div class="team-members">
+                    <% project.team_members.forEach((member)=> { %>
+                        <div class="team-member">
+                            <p class="pteam" onclick="toggleMemberReports(event)">
+                                Reports from <%= member.name %>
+                            </p>
+                            <ul class="reportshidden">
+                                <% member.reports.forEach((report)=> { %>
+                                    <li class="single-report">
+                                        <p class="reporttxt">
+                                            <%= report.content %>
+                                        </p>
+                                        <% const submissionDate=new Date(report.submission_date); const
+                                            formattedSubmissionDate=`${submissionDate.getMonth() +
+                                            1}/${submissionDate.getDate()}/${submissionDate.getFullYear()}`; %>
+                                            <p class="reportdate">
+                                                Submitted on: <%= formattedSubmissionDate %>
+                                                    <%= report.status %>
+                                            </p>
+                                            <button class="btncomment"
+                                                onclick="openCommentModal('<%= report.report_id %>')">Comment</button>
+                                            <% if (report.comment && report.comment.trim() !=="" ) { %>
+                                                <p class="report-comments">
+                                                    Comments: <%= report.comment %>
+                                                </p>
+                                                <% } %>
+                                                    <% if (report.status !=="Read" ) { %>
+                                                        <form action="/mark-report-read" method="post">
+                                                            <input type="hidden" name="reportId"
+                                                                value="<%= report.report_id %>">
+                                                            <button type="submit" class="mark-read-btn">Mark as
+                                                                Read</button>
+                                                        </form>
+                                                        <% } %>
+                                    </li>
+                                    <% }) %>
+                            </ul>
+                        </div>
+                        <% }) %>
+                </div>
+                <div id="commentModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeCommentModal()">&times;</span>
+                        <form action="/add-comment" method="post">
+                            <label for="comment">Add/Modify Comment:</label>
+                            <textarea name="comment" id="commentText" rows="4" cols="50"></textarea>
+                            <input type="hidden" id="reportIdForComment" name="reportId">
+                            <button type="submit">Submit Comment</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% }) %>
+
+            <div class="allreport">
+                <p2>All the reports than can be sorted</p2>
+                <br>
+                <div class="sort-buttons">
+                    <button class="sort-button" onclick="sortReports('oldest')">Oldest</button>
+                    <button class="sort-button" onclick="sortReports('newest')">Newest</button>
+                    <button class="sort-button" onclick="sortReports('unread')">Unread</button>
+                </div>
+                <ul class="scroll-box">
+                    <% projects.forEach((project)=> { %>
+                        <% project.team_members.forEach((member)=> { %>
+                            <% member.reports.forEach((report)=> { %>
+                                <li class="report-item">
+                                    <strong class="p2">Report from <%= member.name %></strong>
+                                    <p>
+                                        <%= report.content %>
+                                    </p>
+                                    <% const submissionDate=new Date(report.submission_date); const
+                                        formattedSubmissionDate=`${submissionDate.getMonth()+1}/${submissionDate.getDate()}/${submissionDate.getFullYear()}`;
+                                        %>
+                                        <p class="reportdate">
+                                            Submitted on: <%= formattedSubmissionDate %>
+                                                <%= report.status %>
+                                        </p>
+                                        <button type="submit" class="btncomment"
+                                            onclick="openCommentModal('<%= report.report_id %>')">Comment</button>
+
+                                        <% if (report.comment && report.comment.trim() !=="" ) { %>
+                                            <p class="report-comments">Comments: <%= report.comment %>
+                                            </p>
+                                            <% } %>
+                                                <% if (report.status !=="Read" ) { %>
+                                                    <form action="/mark-report-read" method="post">
+                                                        <input type="hidden" name="reportId"
+                                                            value="<%= report.report_id %>">
+                                                        <button type="submit" class="mark-read-btn">Mark as
+                                                            Read</button>
+                                                    </form>
+                                                    <% } %>
+
+                                </li>
+                                <% }) %>
+                                    <% }) %>
+                                        <% }) %>
+                </ul>
+            </div>
+
+            <%- include('footer.ejs') %>
+</body>
+
+</html>
+
+<script>
+
+    function openCommentModal(reportId) {
+        console.log("Modal function triggered for report ID: ", reportId);
+        const modal = document.getElementById('commentModal');
+        const reportIdInput = document.getElementById('reportIdForComment');
+        reportIdInput.value = reportId;
+        modal.style.display = "block";
+    }
+
+    function closeCommentModal() {
+        const modal = document.getElementById('commentModal');
+        modal.style.display = "none";
+    }
+
+    function toggleMemberReports(event) {
+        const teamMemberSection = event.target.parentNode;
+        const reportsList = teamMemberSection.querySelector('.reportshidden');
+
+        if (reportsList) {
+            reportsList.classList.toggle('hidden');
+        }
+    }
+
+    function toggleProjectDetails(event) {
+        const projectSection = event.target.parentNode; // this is the container for the clicked project
+        const projectDetails = projectSection.querySelector('.project-details');
+
+        if (projectDetails) {
+            projectDetails.classList.toggle('hidden');
+        }
+    }
+
+    function sortReports(order) {
+        const reportList = document.querySelector('.scroll-box');
+        const reports = Array.from(reportList.children);
+
+        if (order === 'oldest') {
+            reports.sort((a, b) => {
+                const dateA = new Date(a.querySelector('.reportdate').innerText.split('Submitted on: ')[1].split(' ')[0]);
+                const dateB = new Date(b.querySelector('.reportdate').innerText.split('Submitted on: ')[1].split(' ')[0]);
+                return dateA - dateB;
+            });
+        } else if (order === 'newest') {
+            reports.sort((a, b) => {
+                const dateA = new Date(a.querySelector('.reportdate').innerText.split('Submitted on: ')[1].split(' ')[0]);
+                const dateB = new Date(b.querySelector('.reportdate').innerText.split('Submitted on: ')[1].split(' ')[0]);
+                return dateB - dateA;
+            });
+        } else if (order === 'unread') {
+            reports.sort((a, b) => {
+                const statusA = a.querySelector('.reportdate').innerText.includes('Unread') ? -1 : 1;
+                const statusB = b.querySelector('.reportdate').innerText.includes('Unread') ? -1 : 1;
+                return statusA - statusB;
+            });
+        }
+
+        
+        reportList.innerHTML = '';
+        reports.forEach(report => reportList.appendChild(report));
+    }
+
+</script>

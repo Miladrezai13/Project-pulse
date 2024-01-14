@@ -1,0 +1,4 @@
+employee_id,name,email,mobile_number,password,role
+E1001,John,jifivab505@scubalm.com,123-456-7890,hashed_password1,Team Member
+E1002,Jane Smith,vovole6023@bnovel.com,123-456-7891,hashed_password2,Team Member
+E1005,Michael White,michael.white@email.com,123-456-7894,hashed_password5,Team Member
